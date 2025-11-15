@@ -7,22 +7,18 @@ from flask import Flask
 import threading
 import requests
 
-# ===== إعدادات التشغيل الدائم =====
-REPLIT_URL = "https://dfb02107-538f-443c-b646-bdf1b02d7c3f-00-123s2detw4fux.spock.replit.dev"  # غير هذا الرابط
-PING_INTERVAL = 240  # 4 دقائق
-
 # ===== إعدادات البوت =====
 ROOM_ID = "68e7e3d7dc5306e315d2289b"
 API_TOKEN = "6c10af66df88f04e1d68189135dc82a79ad3604aed82d539277e1a2c382852f1"
 ADMIN_USERNAME = "Yonnki_HB"
 ADMINS = ["Yonnki_HB", "0.OI"]  # قائمة المشرفين
 
-# ===== نظام التشغيل الدائم =====
+# ===== نظام التشغيل الدائم لـ Render =====
 app = Flask(__name__)
 
 @app.route('/')
 def home():
-    return "🤖 البوت شغال بشكل دائم!"
+    return "🤖 البوت شغال بشكل دائم على Render!"
 
 @app.route('/ping')
 def ping():
@@ -33,35 +29,20 @@ def status():
     return {
         "status": "online",
         "bot": "running", 
+        "platform": "Render",
         "time": time.strftime('%Y-%m-%d %H:%M:%S')
     }
 
 def run_flask():
-    app.run(host='0.0.0.0', port=8080)
+    port = int(os.environ.get('PORT', 8080))
+    app.run(host='0.0.0.0', port=port)
 
 def keep_alive():
     """بدء سيرفر ويب للحفاظ على التشغيل"""
     t = threading.Thread(target=run_flask)
     t.daemon = True
     t.start()
-
-def ping_self():
-    """يرسل ping تلقائي كل 4 دقائق"""
-    while True:
-        try:
-            response = requests.get(f"{REPLIT_URL}/ping", timeout=10)
-            print(f"✅ بينج ناجح - {time.strftime('%H:%M:%S')}")
-        except Exception as e:
-            print(f"❌ فشل البينج: {e}")
-        
-        time.sleep(PING_INTERVAL)
-
-def start_ping_service():
-    """بدء خدمة البينج التلقائي"""
-    ping_thread = threading.Thread(target=ping_self)
-    ping_thread.daemon = True
-    ping_thread.start()
-    print("🚀 بدأت خدمة البينج التلقائي")
+    print(f"🚀 بدأ سيرفر الويب على port {os.environ.get('PORT', 8080)}")
 
 # ===== البوت الرئيسي =====
 class SimpleBot(BaseBot):
@@ -79,9 +60,9 @@ class SimpleBot(BaseBot):
         self.protected_users = set()  # المستخدمين المحميين من السحب
 
     async def on_start(self, session_metadata):
-        print("[BOT] ✅ متصل")
+        print("[BOT] ✅ متصل بالغرفة على Render")
         self.bot_id = session_metadata.user_id
-        await self.highrise.chat("🤖 البوت شغال بشكل دائم!")
+        await self.highrise.chat("🤖 البوت شغال بشكل دائم على Render!")
         
         # بدء المهام
         asyncio.create_task(self.auto_welcome())
@@ -92,7 +73,7 @@ class SimpleBot(BaseBot):
         """مهمة للحفاظ على التشغيل الدائم"""
         while self.is_running:
             try:
-                print(f"[BOT] 🟢 البوت شغال - {time.strftime('%H:%M:%S')}")
+                print(f"[BOT] 🟢 البوت شغال على Render - {time.strftime('%H:%M:%S')}")
                 await asyncio.sleep(300)  # كل 5 دقائق
             except Exception as e:
                 print(f"[BOT] ❌ خطأ في مهمة الحفاظ: {e}")
@@ -901,12 +882,9 @@ class SimpleBot(BaseBot):
 if __name__ == "__main__":
     # بدء جميع الخدمات
     keep_alive()
-    start_ping_service()
     
-    print("🚀 بدأ تشغيل البوت بشكل دائم...")
-    print("📡 خدمة البينج التلقائي شغالة")
-    print("🌐 سيرفر الويب شغال على port 8080")
-    print(f"🔗 الرابط: {REPLIT_URL}")
+    print("🚀 بدأ تشغيل البوت بشكل دائم على Render...")
+    print("🌐 سيرفر الويب شغال للحفاظ على التشغيل")
     
     # تشغيل البوت
-    os.system(f"highrise main:SimpleBot {ROOM_ID} {API_TOKEN}") 
+    os.system(f"highrise main:SimpleBot {ROOM_ID} {API_TOKEN}")
